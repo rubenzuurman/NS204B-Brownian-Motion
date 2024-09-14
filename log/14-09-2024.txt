@@ -1,0 +1,29 @@
+14-09-2024 20.15 start
+Pip install trackpy and deps.
+Commit elementary code to github together with requirements.txt and data (I know you're not supposed to commit binaries but it's whatever, they're small (<2MB)).
+
+Pip install pims, moviepy.
+20.41
+Getting the following error currently:
+    We had to kill ffmpeg to stop it.
+    Exception ignored in: <function ImageIOReader.__del__ at 0x000001A067506A20>
+    Traceback (most recent call last):
+      File "C:\Users\Ruben\Documents\Programming\Python\NS204B-Brownian-Motion\venv\Lib\site-packages\pims\imageio_reader.py", line 155, in __del__
+        self.reader.close()
+      File "C:\Users\Ruben\Documents\Programming\Python\NS204B-Brownian-Motion\venv\Lib\site-packages\imageio\core\format.py", line 350, in close
+        self._close()
+      File "C:\Users\Ruben\Documents\Programming\Python\NS204B-Brownian-Motion\venv\Lib\site-packages\imageio\plugins\ffmpeg.py", line 370, in _close
+        self._read_gen.close()
+      File "C:\Users\Ruben\Documents\Programming\Python\NS204B-Brownian-Motion\venv\Lib\site-packages\imageio_ffmpeg\_io.py", line 379, in read_frames
+        time.sleep(0.01)
+    OSError: [WinError 6] The handle is invalid
+I don't know why this is happening.
+Doesn't matter which one of the 6 files I choose.
+Pip installed opencv-python just to be sure.
+
+20.52
+Able to load video frames using cv2.
+Converted first frame to grayscale and saved as png.
+
+21.01
+Ref for video loading using cv2: https://stackoverflow.com/questions/21669632/how-do-i-open-wmv-files-with-opencv-on-mac
