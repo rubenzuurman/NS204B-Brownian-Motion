@@ -163,3 +163,5 @@ cython_debug/
 
 # Custom
 test.png
+hist_and_annotation.png
+frames_cache.pickle

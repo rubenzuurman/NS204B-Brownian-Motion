@@ -3,6 +3,7 @@ import os
 import cv2
 import matplotlib.pyplot as plt
 import pims
+import trackpy as tp
 
 def load_data(path: str):
     # Check if path exists.
@@ -40,5 +41,13 @@ def load_data(path: str):
 def preprocess(data):
     pass
 
-def get_trajectories(data):
-    pass
+def get_trajectories(frames):
+    f = tp.locate(frames[0], 11, invert=True, minmass=600)
+    
+    fig, ax = plt.subplots(ncols=2, nrows=1)
+    ax[0].hist(f["mass"], bins=20)
+    ax[0].set(xlabel="mass", ylabel="count")
+    
+    tp.annotate(f, frames[0], ax=ax[1])
+    
+    fig.savefig("hist_and_annotation.png")

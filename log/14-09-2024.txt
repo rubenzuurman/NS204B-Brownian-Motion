@@ -27,3 +27,23 @@ Converted first frame to grayscale and saved as png.
 
 21.01
 Ref for video loading using cv2: https://stackoverflow.com/questions/21669632/how-do-i-open-wmv-files-with-opencv-on-mac
+
+21.03
+Committed video loading code.
+
+21.12
+Implemented caching of data to save some time on loading the data, but the cache file of a 2MB wmv is 570MB, so this will only increase load on ssd, which I don't think is worth it for 1-2 seconds per run.
+In short: not doing caching.
+
+21.21
+Trackpy.locate seems to return a dataframe with potential particle positions (parameters to be tuned).
+Trackpy.annotate returns an Axes object (e.g. 'Axes(0.125,0.11;0.775x0.77)'), but I can't seem to figure out what I'm supposed to do with the axes object, or what is represents.
+
+21.29
+Particle mass represents how contrasty the particle is it seems. I still gotta figure out how to actually plot the results of annotate().
+Gonna take a break now.
+
+21.39 Start
+tp.annotate has an 'ax' parameter, which I'm gonna try now.
+21.41
+It works [log/Screenshot 2024-09-14 214205.png].
