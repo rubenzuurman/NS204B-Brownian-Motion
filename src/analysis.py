@@ -2,8 +2,15 @@ import os
 
 import cv2
 import matplotlib.pyplot as plt
+import pandas as pd
+# TODO: Maybe remove these before submitting code for grading.
+pd.set_option("display.max_columns", None) # Make sure all dataframe columns are printed when printing dataframe
+pd.set_option("display.max_rows", None) # Make sure all dataframe rows are printed when printing dataframe
+pd.set_option("display.width", 200) # Set terminal width in number of characters to prevent new line in middle of printing dataframe
 import pims
 import trackpy as tp
+
+from src.cache import cache_exists, load_cache, save_cache
 
 def load_data(path: str):
     # Check if path exists.
@@ -42,12 +49,54 @@ def preprocess(data):
     pass
 
 def get_trajectories(frames):
-    f = tp.locate(frames[0], 11, invert=True, minmass=600)
+    cache_path = "cache/batch_df.pickle"
+    if cache_exists(cache_path):
+        # Attempt to load cache if it exists.
+        f = load_cache(cache_path)
+        
+        # If cache fails to load, generate new data and attempt to overwrite it.
+        if f is None:
+            f = tp.batch(frames[:10], 11, invert=True, minmass=600, processes=1)
+            save_cache(f, cache_path)
+    else:
+        # Generate data and save to cache if cache does not exist.
+        f = tp.batch(frames[:10], 11, invert=True, minmass=600, processes=1)
+        save_cache(f, cache_path)
     
-    fig, ax = plt.subplots(ncols=2, nrows=1)
+    print(f)
+    
+    """fig, ax = plt.subplots(ncols=3, nrows=1)
+    
     ax[0].hist(f["mass"], bins=20)
     ax[0].set(xlabel="mass", ylabel="count")
     
     tp.annotate(f, frames[0], ax=ax[1])
     
-    fig.savefig("hist_and_annotation.png")
+    #print(tp.subpx_bias(f)[0][0])
+    subpx_bias(f, ax=ax[2])
+    
+    fig.savefig("hist_and_annotation.png")"""
+
+
+
+def subpx_bias(f, pos_columns=None, ax=None):
+    # Copied from the source of trackpy, may be deleted when no longer needed.
+    # TODO: Remove this function before handing in for grading.
+    """Histogram the fractional part of the x and y position.
+
+    Parameters
+    ----------
+    f : DataFrame
+    pos_columns : list of column names, optional
+
+    Notes
+    -----
+    If subpixel accuracy is good, this should be flat. If it depressed in the
+    middle, try using a larger value for feature diameter."""
+    if pos_columns is None:
+        if 'z' in f:
+            pos_columns = ['x', 'y', 'z']
+        else:
+            pos_columns = ['x', 'y']
+    axlist = f[pos_columns].applymap(lambda x: x % 1).hist(ax=ax)
+    return axlist

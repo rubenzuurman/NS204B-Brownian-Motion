@@ -47,3 +47,6 @@ Gonna take a break now.
 tp.annotate has an 'ax' parameter, which I'm gonna try now.
 21.41
 It works [log/Screenshot 2024-09-14 214205.png].
+21.53
+Committed visualising tp.locate().
+To do next time: tp.batch() on subset of frames to test. Done for today.

@@ -1,0 +1,24 @@
+15-09-2024 12.36 Start
+Second argument to tp.locate() is estimated particle size in pixels.
+    9 seems to work, but I'll leave it at 11 to be on the safe side (as suggested in the walkthrough)
+12.47
+Set pandas options to print full dataframe instead of three dots in the middle.
+    https://stackoverflow.com/questions/11361985/output-data-from-all-columns-in-a-dataframe-in-pandas
+13.04
+Got plot of hist of tp.subpx_bias() working by copying it and adding an 'ax' parameter to the function, since the df.hist() function accepts an 'ax' parameter.
+However, since the number of particles is very small, the histogram does not have a clear shape, so a dip could not be seen. [log/test_13_09_2024_05_frame0_minmass600_hist.png]
+13.17 End
+tp.batch(frames[0]) crashed my pc big time. All chrome windows are unresponsive, there's an extra window with the title 'chrome.exe - Application Error'. No clue what to do now.
+
+14.23
+Restarted pc and chrome is restored. I'm thinking of running it in a sandbox environment to prevent this from happening.
+
+15.35 Start ish
+Ran the project inside windows sandbox. It gave some error about 'DLL could not be loaded' -> 'pip install msvc-runtime' outside of venv solves it. Then it crashed with some 'Page file too small' error with a lot of threadpool/worker messages indicating multithreading. I've now set 'processes=1' in tp.batch() in the hope that it solves the issue.
+It solved the issue.
+
+15.40
+Works on main machine as well. I comtemplate caching the dataframe returned by tp.batch().
+
+15.51
+Implemented caching mechanism in src/cache.py. It saves a bit of time with the tp.batch() command.
