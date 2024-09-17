@@ -13,6 +13,10 @@ import trackpy as tp
 
 from src.cache import cache_exists, load_cache, save_cache
 
+PARTICLE_DIAMETER = 11 # Particle diameter in pixels to look for (?)
+MINIMUM_MASS = 600     # Minimum mass of the particle to be included (read integrated brightness)
+MINIMUM_TRAJECTORY_LENGTH_FRAMES = 25 # Trajectories with a length of less than 25 frames will be pruned
+
 def load_frames_from_video(path: str):
     # Check if path exists.
     assert os.path.isfile(path), f"File could not be found: '{path}'."
@@ -97,7 +101,7 @@ def attempt_to_load_link_cache():
 def generate_batch_data(frames, number_of_frames):
     # Generate new batch data.
     logger.info("Generating new batch data...")
-    batch_data = tp.batch(frames[:number_of_frames], 11, invert=True, minmass=600, processes=1)
+    batch_data = tp.batch(frames[:number_of_frames], diameter=PARTICLE_DIAMETER, invert=True, minmass=MINIMUM_MASS, processes=1)
     
     # Save batch data.
     batch_cache_path = "cache/batch_df.pickle"
@@ -112,7 +116,9 @@ def generate_link_data(batch_data):
     
     # Generate new link data.
     logger.info("Generating new link data...")
-    link_data = tp.link(batch_data, 5, memory=3)
+    # search_range: Maximum distance a particle can travel between frames to be considered a valid trajectory.
+    # memory:       Number of frames a particle can disappear for and reappear nearby to be considered the same particle.
+    link_data = tp.link(batch_data, search_range=5, memory=3)
     
     # Save link data.
     link_cache_path = "cache/link_df.pickle"
@@ -156,8 +162,8 @@ def get_trajectories(frames, batch_data, link_data):
     
     fig.savefig("hist_and_annotation.png")
     
-    # Filter stubs, e.g. remove trajectories shorter than some number of frames (25 in this case).
-    t_filtered = tp.filter_stubs(link_data, 25)
+    # Filter stubs, e.g. remove trajectories shorter than some number of frames (25 in the walkthrough, or whatever is set in the global variable).
+    t_filtered = tp.filter_stubs(link_data, threshold=MINIMUM_TRAJECTORY_LENGTH_FRAMES)
     
     # Print to see how many trajectories were removed.
     print("Before:", link_data["particle"].nunique())
@@ -176,6 +182,40 @@ def get_trajectories(frames, batch_data, link_data):
     fig, ax = plt.subplots(ncols=1, nrows=1)
     tp.plot_traj(t_filtered_pruned, ax=ax)
     fig.savefig("trajectories.png")
+    
+    # Compute drift.
+    drift = tp.compute_drift(t_filtered_pruned)
+    
+    # Plot drift.
+    fig, ax = plt.subplots(nrows=1, ncols=1)
+    ax.plot(drift.index, drift["x"])
+    ax.plot(drift.index, drift["y"])
+    fig.savefig("drift.png")
+    
+    # Subtract drift from data.
+    t_no_drift = tp.subtract_drift(t_filtered_pruned.copy(), drift)
+    
+    # Plot trajectories again.
+    fig, ax = plt.subplots(ncols=1, nrows=1)
+    tp.plot_traj(t_no_drift, ax=ax)
+    fig.savefig("trajectories_no_drift.png")
+    
+    return t_no_drift
+
+def analyse_trajectories(trajectory_data):
+    # Calculate mean squared displacement.
+    microns_per_pixel = 100 / 285 # TODO: Measure this using the special 10x100 um slides.
+    frames_per_second = 20
+    
+    del trajectory_data["particle"]
+    msd = tp.imsd(trajectory_data, microns_per_pixel, frames_per_second)
+    
+    fig, ax = plt.subplots(ncols=1, nrows=1)
+    ax.plot(msd.index, msd, "k-", alpha=0.1)  # black lines, semitransparent
+    ax.set(xlabel="lag time $t$", ylabel=r"$\langle \Delta r^2 \rangle$ [$\mu$m$^2$]")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    fig.savefig("msd_vs_lag_time.png")
 
 def subpx_bias(f, pos_columns=None, ax=None):
     # Copied from the source of trackpy, may be deleted when no longer needed.

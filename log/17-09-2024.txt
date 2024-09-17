@@ -24,3 +24,20 @@ Committed the code cleanup changes.
 Also discovered a bug while testing AFTER committing (for some reason I had not run the code before committing): saving of batch- and linkdata failed because I forgot to change a variable name. This is now fixed.
 17.12
 Fixed a warning message from a function mostly copied from the trackpy source.
+~17.13
+Commit changes relating to fixing bugs.
+
+17.25
+Calculated drift from dataset, but this is not linear in time or something (see plot in log/test_13_09_2024_05_frame0to599_drift.png). Saved the trajectories with drift subtracted to log/test_13_09_2024_05_frame0to599_trajectories_no_drift.png). I don't know if this is a bad sign, since the walkthrough suggests that the drift may be linear. However, the drift I observe is small (especially the y component) compared to their drift, so maybe it's fine.
+17.42
+Calculated mean squared distance for every particle and plotted mean squared distance vs lag time (I don't know what this means).
+I've also looked again at the 'data/13_09_2024_06_good.wmv', and it should be doable. If I can distinguish the particles, the computer should be able to as well, given the correct settings. It also contains way more particles, so that should make the statistics work much better.
+17.46
+I just realized the settings need to be customizable easily, and I don't know if they currently are.
+17.49
+Change some of the analysis settings to global variables in analysis.py, I may change this later.
+17.50 End
+
+19.31 Start
+19.36
+Add more global variables. Added comments to global variables.

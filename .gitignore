@@ -167,4 +167,7 @@ hist_and_annotation.png
 mass_size.png
 trajectories.png
 grayscale_frame.png
+drift.png
+msd_vs_lag_time.png
+trajectories_no_drift.png
 cache/
