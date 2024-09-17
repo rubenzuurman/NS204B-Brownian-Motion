@@ -1,0 +1,3 @@
+17-09-2024 15.30 Start
+15.51
+Analyzed first 600 frames of test_13_09_2024_05.wmv and plotted a mass vs size graph (log/test_13_09_2024_05_frame0to599_mass_vs_size.png) and the trajectories using the tp.plot_traj() function (log/test_13_09_2024_05_frame0to599_trajectories.png).

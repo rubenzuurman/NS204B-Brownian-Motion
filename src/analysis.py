@@ -1,6 +1,7 @@
 import os
 
 import cv2
+from loguru import logger
 import matplotlib.pyplot as plt
 import pandas as pd
 # TODO: Maybe remove these before submitting code for grading.
@@ -49,23 +50,34 @@ def preprocess(data):
     pass
 
 def get_trajectories(frames):
-    cache_path = "cache/batch_df.pickle"
-    if cache_exists(cache_path):
+    # Set number of frames to analyse.
+    number_of_frames = 600
+    
+    # Load batch data.
+    batch_cache_path = "cache/batch_df.pickle"
+    logger.info("Loading batch data...")
+    if cache_exists(batch_cache_path):
         # Attempt to load cache if it exists.
-        f = load_cache(cache_path)
+        f = load_cache(batch_cache_path)
         
         # If cache fails to load, generate new data and attempt to overwrite it.
+        # NOTE: The processes=1 option was EXTREMELY important in my case, if not present it used a ton of RAM and made all my open chrome windows crash.
         if f is None:
-            f = tp.batch(frames[:10], 11, invert=True, minmass=600, processes=1)
-            save_cache(f, cache_path)
+            logger.warning("Failed to load batch data from cache, generating new data...")
+            f = tp.batch(frames[:number_of_frames], 11, invert=True, minmass=600, processes=1)
+            save_cache(f, batch_cache_path)
+            logger.warning("Generated new data and saved to cache.")
+        else:
+            logger.success("Loaded batch data from cache.")
     else:
         # Generate data and save to cache if cache does not exist.
-        f = tp.batch(frames[:10], 11, invert=True, minmass=600, processes=1)
-        save_cache(f, cache_path)
+        logger.warning("Generating new data...")
+        f = tp.batch(frames[:number_of_frames], 11, invert=True, minmass=600, processes=1)
+        save_cache(f, batch_cache_path)
+        logger.warning("Generated new data and saved to cache.")
     
-    print(f)
-    
-    """fig, ax = plt.subplots(ncols=3, nrows=1)
+    # Plot batch data.
+    fig, ax = plt.subplots(ncols=3, nrows=1)
     
     ax[0].hist(f["mass"], bins=20)
     ax[0].set(xlabel="mass", ylabel="count")
@@ -75,9 +87,51 @@ def get_trajectories(frames):
     #print(tp.subpx_bias(f)[0][0])
     subpx_bias(f, ax=ax[2])
     
-    fig.savefig("hist_and_annotation.png")"""
-
-
+    fig.savefig("hist_and_annotation.png")
+    
+    # Suppress messages from trackpy during linking, since this step executes the fastest.
+    tp.quiet()
+    
+    # Load link data.
+    link_cache_path = "cache/link_df.pickle"
+    logger.info("Loading link data...")
+    if cache_exists(link_cache_path):
+        # Attempt to load cache if it exists.
+        t = load_cache(link_cache_path)
+        
+        # If cache fails to load, generate new data and attempt to overwrite it.
+        if t is None:
+            t = tp.link(f, 5, memory=3)
+            save_cache(t, link_cache_path)
+            logger.warning("Failed to load link data from cache, generated new data and saved to cache.")
+        else:
+            logger.success("Loaded link data from cache.")
+    else:
+        # Generate data and save to cache if cache does not exist.
+        t = tp.link(f, 5, memory=3)
+        save_cache(t, link_cache_path)
+        logger.warning("Generated new data and saved to cache.")
+    
+    # Filter stubs, e.g. remove trajectories shorter than some number of frames.
+    t_filtered = tp.filter_stubs(t, 25)
+    
+    # Print to see how many trajectories were removed.
+    print("Before:", t["particle"].nunique())
+    print("After:", t_filtered["particle"].nunique())
+    
+    # Plot trjactory data.
+    fig, ax = plt.subplots(ncols=1, nrows=1)
+    tp.mass_size(t_filtered.groupby("particle").mean(), ax=ax)
+    fig.savefig("mass_size.png")
+    
+    # At this stage it would be good to filter the trajectory dataframe for e.g. low mass, high size, or high eccentricity.
+    #t_filtered_pruned = t_filtered[((t_filtered['mass'] > 50) & (t_filtered['size'] < 2.6) & (t_filtered['ecc'] < 0.3))]
+    t_filtered_pruned = t_filtered
+    
+    # Plot trajectories.
+    fig, ax = plt.subplots(ncols=1, nrows=1)
+    tp.plot_traj(t_filtered_pruned, ax=ax)
+    fig.savefig("trajectories.png")
 
 def subpx_bias(f, pos_columns=None, ax=None):
     # Copied from the source of trackpy, may be deleted when no longer needed.

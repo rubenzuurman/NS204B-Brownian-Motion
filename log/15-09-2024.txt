@@ -22,3 +22,13 @@ Works on main machine as well. I comtemplate caching the dataframe returned by t
 
 15.51
 Implemented caching mechanism in src/cache.py. It saves a bit of time with the tp.batch() command.
+
+15.55
+Committed changes. Changes include using tp.batch() instead of tp.locate() and implementing caching.
+
+16.07
+Implemented tp.link() including caching.
+
+16.09 End
+Added usage of tp.filter_stubs(), removing trajectories shorter than some number of frames (25 frames in this case).
+Taking a break for now.
