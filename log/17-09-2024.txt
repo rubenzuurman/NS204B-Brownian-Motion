@@ -1,3 +1,20 @@
 17-09-2024 15.30 Start
 15.51
 Analyzed first 600 frames of test_13_09_2024_05.wmv and plotted a mass vs size graph (log/test_13_09_2024_05_frame0to599_mass_vs_size.png) and the trajectories using the tp.plot_traj() function (log/test_13_09_2024_05_frame0to599_trajectories.png).
+16.04
+Committed changes, which includes linking of the data, then plotting mass vs size and plotting trajectories.
+
+16.29
+Split data loading and generating code into multiple functions to make it more readable.
+Side note: Generating batch data for 600 frames (30 seconds) to data takes about 2 minutes.
+16.32
+Another side note: Frames 222-224 have 3 or 4 trajectories, but the rest of the frames have 13+, this needs to be checked at some point.
+16.36
+The last frame of the video is now saved in grayscale as 'grayscale_frame.png' (example in log/test_13_09_2024_05_lastframe_grayscale.png).
+16.45
+Restructured the main file code a little bit more.
+I contemplate abstracting the plotting code into it's own function as well, because it clutters the main code quite a lot.
+16.54
+Restructured the code even more, generating batch data and generating link data now have their own functions.
+17.01
+Removed two functions that where called exactly once and consisted of two lines each.

@@ -13,7 +13,7 @@ import trackpy as tp
 
 from src.cache import cache_exists, load_cache, save_cache
 
-def load_data(path: str):
+def load_frames_from_video(path: str):
     # Check if path exists.
     assert os.path.isfile(path), f"File could not be found: '{path}'."
     
@@ -40,84 +40,128 @@ def load_data(path: str):
         # Add frame to frames list.
         frames.append(image_grayscale)
     
-    # Save image (uncomment line below to save last frame in grayscale as test.png).
-    #plt.imsave("test.png", image_grayscale, cmap="gray", vmin=0, vmax=255)
+    # TODO: Remove this before handing in for grading (together with the other code for generating images).
+    # Save last frame in grayscale as grayscale_frame.png.
+    plt.imsave("grayscale_frame.png", image_grayscale, cmap="gray", vmin=0, vmax=255)
     
     # Return list of frames.
     return frames
 
-def preprocess(data):
-    pass
-
-def get_trajectories(frames):
-    # Set number of frames to analyse.
-    number_of_frames = 600
-    
-    # Load batch data.
+def attempt_to_load_batch_cache():
+    """
+    Returns (False, None) if the cache does not exist or could not be loaded properly. Returns (True, data) otherwise, where data is the batch data (dataframe).
+    """
+    # Set batch cache path.
     batch_cache_path = "cache/batch_df.pickle"
-    logger.info("Loading batch data...")
-    if cache_exists(batch_cache_path):
-        # Attempt to load cache if it exists.
-        f = load_cache(batch_cache_path)
-        
-        # If cache fails to load, generate new data and attempt to overwrite it.
-        # NOTE: The processes=1 option was EXTREMELY important in my case, if not present it used a ton of RAM and made all my open chrome windows crash.
-        if f is None:
-            logger.warning("Failed to load batch data from cache, generating new data...")
-            f = tp.batch(frames[:number_of_frames], 11, invert=True, minmass=600, processes=1)
-            save_cache(f, batch_cache_path)
-            logger.warning("Generated new data and saved to cache.")
-        else:
-            logger.success("Loaded batch data from cache.")
-    else:
-        # Generate data and save to cache if cache does not exist.
-        logger.warning("Generating new data...")
-        f = tp.batch(frames[:number_of_frames], 11, invert=True, minmass=600, processes=1)
-        save_cache(f, batch_cache_path)
-        logger.warning("Generated new data and saved to cache.")
+    logger.info("Attempting to load batch data...")
     
-    # Plot batch data.
-    fig, ax = plt.subplots(ncols=3, nrows=1)
+    # Return false if the file does not exist.
+    if not cache_exists(batch_cache_path):
+        logger.warning("Batch cache file does not exist.")
+        return (False, None)
     
-    ax[0].hist(f["mass"], bins=20)
-    ax[0].set(xlabel="mass", ylabel="count")
+    # Attempt to load batch data.
+    batch_data = load_cache(batch_cache_path)
+    if batch_data is None:
+        logger.warning("Failed to load batch data from cache file.")
+        return (False, None)
     
-    tp.annotate(f, frames[0], ax=ax[1])
+    # Return data if everything succeeded.
+    logger.success("Loaded batch data from cache.")
+    return (True, batch_data)
+
+def attempt_to_load_link_cache():
+    """
+    Returns (False, None) if the cache does not exist or could not be loaded properly. Returns (True, data) otherwise, where data is the link data (dataframe).
+    Note: If the batch data is regenerated, the link data should be regenerated as well, since the batch data is not guaranteed to be identical to the last.
+    """
+    # Set link cache path.
+    link_cache_path = "cache/link_df.pickle"
+    logger.info("Attempting to load link data...")
     
-    #print(tp.subpx_bias(f)[0][0])
-    subpx_bias(f, ax=ax[2])
+    # Return false if the file does not exist.
+    if not cache_exists(link_cache_path):
+        logger.warning("Link cache file does not exist.")
+        return (False, None)
     
-    fig.savefig("hist_and_annotation.png")
+    # Attempt to load link data.
+    link_data = load_cache(link_cache_path)
+    if link_data is None:
+        logger.warning("Failed to load link data from cache file.")
+        return (False, None)
     
+    # Return data if everything succeeded.
+    logger.success("Loaded link data from cache.")
+    return (True, link_data)
+
+def generate_batch_data(frames, number_of_frames):
+    # Generate new batch data.
+    logger.info("Generating new batch data...")
+    batch_data = tp.batch(frames[:number_of_frames], 11, invert=True, minmass=600, processes=1)
+    
+    # Save batch data.
+    batch_cache_path = "cache/batch_df.pickle"
+    save_cache(data, batch_cache_path)
+    
+    # Return batch data.
+    return batch_data
+
+def generate_link_data(batch_data):
     # Suppress messages from trackpy during linking, since this step executes the fastest.
     tp.quiet()
     
-    # Load link data.
-    link_cache_path = "cache/link_df.pickle"
-    logger.info("Loading link data...")
-    if cache_exists(link_cache_path):
-        # Attempt to load cache if it exists.
-        t = load_cache(link_cache_path)
-        
-        # If cache fails to load, generate new data and attempt to overwrite it.
-        if t is None:
-            t = tp.link(f, 5, memory=3)
-            save_cache(t, link_cache_path)
-            logger.warning("Failed to load link data from cache, generated new data and saved to cache.")
-        else:
-            logger.success("Loaded link data from cache.")
-    else:
-        # Generate data and save to cache if cache does not exist.
-        t = tp.link(f, 5, memory=3)
-        save_cache(t, link_cache_path)
-        logger.warning("Generated new data and saved to cache.")
+    # Generate new link data.
+    logger.info("Generating new link data...")
+    link_data = tp.link(batch_data, 5, memory=3)
     
-    # Filter stubs, e.g. remove trajectories shorter than some number of frames.
-    t_filtered = tp.filter_stubs(t, 25)
+    # Save link data.
+    link_cache_path = "cache/link_df.pickle"
+    save_cache(data, link_cache_path)
+    
+    # Return link data.
+    return link_data
+
+def load_data(path: str, number_of_frames: int):
+    # Load frames from video.
+    logger.info(f"Loading frames from file '{path}'...")
+    frames = load_frames_from_video(path)
+    
+    # Load batch data.
+    batch_success, batch_data = attempt_to_load_batch_cache()
+    link_success, link_data = attempt_to_load_link_cache()
+    if not batch_success:
+        # Generate batch data if batch cache failed to load.
+        batch_data = generate_batch_data(frames, number_of_frames)
+        
+        # Generate link data if batch cache failed to load, since the batch data may not be identical to the last.
+        link_data = generate_link_data(batch_data)
+    if batch_success and not link_success:
+        # Generate link data if link cache failed to load.
+        link_data = generate_link_data(batch_data)
+    
+    # Return frames and processed data.
+    return (frames, batch_data, link_data)
+
+def get_trajectories(frames, batch_data, link_data):
+    # Plot batch data.
+    fig, ax = plt.subplots(ncols=3, nrows=1)
+    
+    ax[0].hist(batch_data["mass"], bins=20)
+    ax[0].set(xlabel="mass", ylabel="count")
+    
+    tp.annotate(batch_data, frames[0], ax=ax[1])
+    
+    #print(tp.subpx_bias(batch_data)[0][0])
+    subpx_bias(batch_data, ax=ax[2])
+    
+    fig.savefig("hist_and_annotation.png")
+    
+    # Filter stubs, e.g. remove trajectories shorter than some number of frames (25 in this case).
+    t_filtered = tp.filter_stubs(link_data, 25)
     
     # Print to see how many trajectories were removed.
-    print("Before:", t["particle"].nunique())
-    print("After:", t_filtered["particle"].nunique())
+    print("Before:", link_data["particle"].nunique())
+    print("After: ", t_filtered["particle"].nunique())
     
     # Plot trjactory data.
     fig, ax = plt.subplots(ncols=1, nrows=1)
