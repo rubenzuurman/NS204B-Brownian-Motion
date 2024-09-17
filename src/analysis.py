@@ -101,7 +101,7 @@ def generate_batch_data(frames, number_of_frames):
     
     # Save batch data.
     batch_cache_path = "cache/batch_df.pickle"
-    save_cache(data, batch_cache_path)
+    save_cache(batch_data, batch_cache_path)
     
     # Return batch data.
     return batch_data
@@ -116,7 +116,7 @@ def generate_link_data(batch_data):
     
     # Save link data.
     link_cache_path = "cache/link_df.pickle"
-    save_cache(data, link_cache_path)
+    save_cache(link_data, link_cache_path)
     
     # Return link data.
     return link_data
@@ -196,5 +196,5 @@ def subpx_bias(f, pos_columns=None, ax=None):
             pos_columns = ['x', 'y', 'z']
         else:
             pos_columns = ['x', 'y']
-    axlist = f[pos_columns].applymap(lambda x: x % 1).hist(ax=ax)
+    axlist = f[pos_columns].map(lambda x: x % 1).hist(ax=ax)
     return axlist

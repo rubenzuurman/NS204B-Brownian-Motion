@@ -18,3 +18,9 @@ I contemplate abstracting the plotting code into it's own function as well, beca
 Restructured the code even more, generating batch data and generating link data now have their own functions.
 17.01
 Removed two functions that where called exactly once and consisted of two lines each.
+
+17.08
+Committed the code cleanup changes.
+Also discovered a bug while testing AFTER committing (for some reason I had not run the code before committing): saving of batch- and linkdata failed because I forgot to change a variable name. This is now fixed.
+17.12
+Fixed a warning message from a function mostly copied from the trackpy source.
