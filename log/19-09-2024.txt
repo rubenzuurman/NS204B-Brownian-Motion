@@ -55,3 +55,12 @@ Changed mass to 1500, and only a single particle has nans now.
 
 14.26
 D is still ~10^-12, one order of magnitude to big.
+
+14.53
+Committed the changes. Changes include adding numberous log messages, calculating the cumulative distance travelled by all particles, and analysing the test video from blackboard.
+
+15.04
+Implemented automatic cache folder creation. Fixed a potential bug: plotting the msd of the first particle has been changed from index 0 to the first index available. This is also reflected in the log message. This will still crash if there are no particles to calculate the msd of.
+
+15.14
+The above plot is now only made if there is a particle which' data can be plotted. However, the tp.link() function seems to fail as well if no particles were found by the tp.batch() function.

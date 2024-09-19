@@ -19,6 +19,18 @@ def load_cache(path: str):
         return None
 
 def save_cache(data, path: str):
+    # Check if cache folder exists.
+    cache_folder_path = os.path.join(os.getcwd(), "cache")
+    # Attempt to create the folder if it doesn't exist.
+    if not os.path.isdir(cache_folder_path):
+        try:
+            os.mkdir(cache_folder_path)
+            logger.info(f"Created cache folder at location '{cache_folder_path}'.")
+        except Exception as e:
+            # If the cache folder could not be created, print a warning and exit (cache will not be used).
+            logger.warning(f"Cache folder '{cache_folder_path}' does not exist and could not be created. Reason: '{e}'.")
+            return
+    
     logger.info(f"Saving cache to location '{path}'")
     try:
         with open(path, "wb") as file:

@@ -241,11 +241,14 @@ def analyse_trajectories(trajectory_data, number_of_frames):
     
     # Plot particle with index 0 msd vs time.
     time = list(msd.index)
-    particle0 = list(msd[0])
     fig, ax = plt.subplots(ncols=1, nrows=1)
-    ax.plot(time, particle0)
+    if len(msd.columns) > 0:
+        particle0 = list(msd[msd.columns[0]])
+        ax.plot(time, particle0)
+        logger.info(f"Plotted mean squared displacement of particle with index {msd.columns[0]} vs time (particle0_msd_vs_time.png).")
+    else:
+        logger.warning(f"Failed to plot mean squared displacement of the first available particle. Reason: No particles were available for msd calculation. (This *probably* should have crashed when the tp.link() function was called.)") # TODO: Check if the tp.link() function always fails when there were no particle found by the tp.batch() function, or just remove the 'Reason' part of the above log message and everything after it.
     fig.savefig("particle0_msd_vs_time.png")
-    logger.info("Plotted mean squared displacement of particle with index 0 vs time (particle0_msd_vs_time.png).")
     
     # Calculate (and plot) cumulative distance travelled by each particle.
     cumulative_distance = [[sum(list(msd[particle_no])[0:index]) for index in range(len(msd[particle_no]))] for particle_no in msd.columns]
