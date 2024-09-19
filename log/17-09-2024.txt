@@ -41,3 +41,6 @@ Change some of the analysis settings to global variables in analysis.py, I may c
 19.31 Start
 19.36
 Add more global variables. Added comments to global variables.
+19.56
+Commit changes. Includes subtracting drift from particles, and calculating mean squared distance.
+19.57 End

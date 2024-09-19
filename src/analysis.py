@@ -13,9 +13,12 @@ import trackpy as tp
 
 from src.cache import cache_exists, load_cache, save_cache
 
-PARTICLE_DIAMETER = 11 # Particle diameter in pixels to look for (?)
-MINIMUM_MASS = 600     # Minimum mass of the particle to be included (read integrated brightness)
+PARTICLE_DIAMETER = 15 # Particle diameter in pixels to look for (?)
+MINIMUM_MASS = 1500     # Minimum mass of the particle to be included (read integrated brightness)
 MINIMUM_TRAJECTORY_LENGTH_FRAMES = 25 # Trajectories with a length of less than 25 frames will be pruned
+
+# TODO: Add text to axes in plots.
+# TODO: Make printing of before and after trajectories more pretty.
 
 def load_frames_from_video(path: str):
     # Check if path exists.
@@ -47,6 +50,7 @@ def load_frames_from_video(path: str):
     # TODO: Remove this before handing in for grading (together with the other code for generating images).
     # Save last frame in grayscale as grayscale_frame.png.
     plt.imsave("grayscale_frame.png", image_grayscale, cmap="gray", vmin=0, vmax=255)
+    logger.info(f"Saved frame number {len(frames) - 1} in grayscale to 'grayscale_frame.png'.")
     
     # Return list of frames.
     return frames
@@ -100,7 +104,7 @@ def attempt_to_load_link_cache():
 
 def generate_batch_data(frames, number_of_frames):
     # Generate new batch data.
-    logger.info("Generating new batch data...")
+    logger.info(f"Generating new batch data (diameter={PARTICLE_DIAMETER}, minmass={MINIMUM_MASS})...")
     batch_data = tp.batch(frames[:number_of_frames], diameter=PARTICLE_DIAMETER, invert=True, minmass=MINIMUM_MASS, processes=1)
     
     # Save batch data.
@@ -115,7 +119,7 @@ def generate_link_data(batch_data):
     tp.quiet()
     
     # Generate new link data.
-    logger.info("Generating new link data...")
+    logger.info("Generating new link data (search_range=5, memory=3)...")
     # search_range: Maximum distance a particle can travel between frames to be considered a valid trajectory.
     # memory:       Number of frames a particle can disappear for and reappear nearby to be considered the same particle.
     link_data = tp.link(batch_data, search_range=5, memory=3)
@@ -150,20 +154,31 @@ def load_data(path: str, number_of_frames: int):
 
 def get_trajectories(frames, batch_data, link_data):
     # Plot batch data.
-    fig, ax = plt.subplots(ncols=3, nrows=1)
+    fig, ax = plt.subplots(ncols=2, nrows=1)
     
-    ax[0].hist(batch_data["mass"], bins=20)
-    ax[0].set(xlabel="mass", ylabel="count")
+    frame_no = 40
+    ax[0].set_title(f"Histogram of particles in frame {frame_no}\nbinned by mass")
+    ax[0].hist(batch_data[batch_data["frame"] == frame_no]["mass"], bins=20)
+    ax[0].set(xlabel="Mass", ylabel="Count")
     
-    tp.annotate(batch_data, frames[0], ax=ax[1])
+    ax[1].set_title(f"Annotation of particles in frame {frame_no}")
+    tp.annotate(batch_data[batch_data["frame"] == frame_no], frames[frame_no], ax=ax[1])
     
-    #print(tp.subpx_bias(batch_data)[0][0])
-    subpx_bias(batch_data, ax=ax[2])
-    
+    # TODO: Find a better name for this plot.
+    fig.tight_layout()
     fig.savefig("hist_and_annotation.png")
+    logger.info("Plotted mass vs count histogram and annotated frame (hist_and_annotation.png).")
+    
+    # Plot subpixel bias. If minmass is too low, this will show a dip according to the walkthrough.
+    #print(tp.subpx_bias(batch_data)[0][0])
+    fig, ax = plt.subplots(ncols=1, nrows=1)
+    subpx_bias(batch_data, ax=ax)
+    fig.savefig("subpixel_bias.png")
+    logger.info("Plotted subpixel bias (subpixel_bias.png).")
     
     # Filter stubs, e.g. remove trajectories shorter than some number of frames (25 in the walkthrough, or whatever is set in the global variable).
     t_filtered = tp.filter_stubs(link_data, threshold=MINIMUM_TRAJECTORY_LENGTH_FRAMES)
+    logger.info(f"Removed trajectories shorter than {MINIMUM_TRAJECTORY_LENGTH_FRAMES} frames.")
     
     # Print to see how many trajectories were removed.
     print("Before:", link_data["particle"].nunique())
@@ -172,9 +187,10 @@ def get_trajectories(frames, batch_data, link_data):
     # Plot trjactory data.
     fig, ax = plt.subplots(ncols=1, nrows=1)
     tp.mass_size(t_filtered.groupby("particle").mean(), ax=ax)
-    fig.savefig("mass_size.png")
+    fig.savefig("mass_vs_size.png")
+    logger.info("Plotted mass vs size of all particles (mass_vs_size.png).")
     
-    # At this stage it would be good to filter the trajectory dataframe for e.g. low mass, high size, or high eccentricity.
+    # TODO: At this stage it would be good to filter the trajectory dataframe for e.g. low mass, high size, or high eccentricity.
     #t_filtered_pruned = t_filtered[((t_filtered['mass'] > 50) & (t_filtered['size'] < 2.6) & (t_filtered['ecc'] < 0.3))]
     t_filtered_pruned = t_filtered
     
@@ -182,6 +198,7 @@ def get_trajectories(frames, batch_data, link_data):
     fig, ax = plt.subplots(ncols=1, nrows=1)
     tp.plot_traj(t_filtered_pruned, ax=ax)
     fig.savefig("trajectories.png")
+    logger.info("Plotted raw particle trajectories (trajectories.png).")
     
     # Compute drift.
     drift = tp.compute_drift(t_filtered_pruned)
@@ -191,6 +208,7 @@ def get_trajectories(frames, batch_data, link_data):
     ax.plot(drift.index, drift["x"])
     ax.plot(drift.index, drift["y"])
     fig.savefig("drift.png")
+    logger.info("Plotted drift (drift.png).")
     
     # Subtract drift from data.
     t_no_drift = tp.subtract_drift(t_filtered_pruned.copy(), drift)
@@ -199,23 +217,47 @@ def get_trajectories(frames, batch_data, link_data):
     fig, ax = plt.subplots(ncols=1, nrows=1)
     tp.plot_traj(t_no_drift, ax=ax)
     fig.savefig("trajectories_no_drift.png")
+    logger.info("Plotted particle trajectories after subtracting drift (trajectories_no_drift.png).")
     
     return t_no_drift
 
-def analyse_trajectories(trajectory_data):
+def analyse_trajectories(trajectory_data, number_of_frames):
     # Calculate mean squared displacement.
-    microns_per_pixel = 100 / 285 # TODO: Measure this using the special 10x100 um slides.
+    microns_per_pixel = 1 / 6 # TODO: Measure this using the special 10x100 um slides.
     frames_per_second = 20
     
     del trajectory_data["particle"]
-    msd = tp.imsd(trajectory_data, microns_per_pixel, frames_per_second)
+    msd = tp.imsd(trajectory_data, mpp=microns_per_pixel, fps=frames_per_second, max_lagtime=number_of_frames)
+    logger.info(f"Calculated mean squared displacement of all particles (mpp={microns_per_pixel}, fps={frames_per_second}).")
     
+    # Plot msd vs time.
     fig, ax = plt.subplots(ncols=1, nrows=1)
     ax.plot(msd.index, msd, "k-", alpha=0.1)  # black lines, semitransparent
     ax.set(xlabel="lag time $t$", ylabel=r"$\langle \Delta r^2 \rangle$ [$\mu$m$^2$]")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    fig.savefig("msd_vs_lag_time.png")
+    fig.savefig("msd_vs_lag_time_log.png")
+    logger.info("Plotted mean squared displacement of all particles vs time (log) (msd_vs_lag_time_log.png).")
+    
+    # Plot particle with index 0 msd vs time.
+    time = list(msd.index)
+    particle0 = list(msd[0])
+    fig, ax = plt.subplots(ncols=1, nrows=1)
+    ax.plot(time, particle0)
+    fig.savefig("particle0_msd_vs_time.png")
+    logger.info("Plotted mean squared displacement of particle with index 0 vs time (particle0_msd_vs_time.png).")
+    
+    # Calculate (and plot) cumulative distance travelled by each particle.
+    cumulative_distance = [[sum(list(msd[particle_no])[0:index]) for index in range(len(msd[particle_no]))] for particle_no in msd.columns]
+    fig, ax = plt.subplots(ncols=1, nrows=1)
+    for particle_cumul_list in cumulative_distance:
+        ax.plot(time, particle_cumul_list)
+    fig.savefig("all_particles_cumulative_distance_vs_time.png")
+    logger.info("Plotted cumulative distance travelled of all particles vs time (all_particles_cumulative_distance_vs_time.png).")
+    
+    # Print time and particle data to use in mean and standard deviation calculation.
+    print(f"time = {time}")
+    print(f"particle_distancement = {cumulative_distance}")
 
 def subpx_bias(f, pos_columns=None, ax=None):
     # Copied from the source of trackpy, may be deleted when no longer needed.

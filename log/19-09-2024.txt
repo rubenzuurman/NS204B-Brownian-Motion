@@ -1,0 +1,57 @@
+19-09-2024
+11.00 Start
+Implemented calculation of cumulative displacements of particles for the calculation of the diffusion coefficient yesterday during practicum hours, but I forgot to save it somewhere where I can reach it from home. I'll try to reimplement it now.
+11.23
+Implemented cumulative distance calculation per particle and plotted them (log/test_13_09_2024_05_all_particle_cumulative_distance_vs_time.png) (particle diameter 11, minimum mass 600, minimum number of frames for trajectory 25, search range 5 pixels, memory 3 frames, 1/6 um per pixel, 20 fps, all 637 frames, test_13_09_2024_05.wmv).
+11.36-end.end
+I'm gonna try to figure out how a new video should be analysed.
+    1. Set minmass and particle diameter to zero.
+    2. Analyse first frame, annotate and generate mass histogram, then configure particle diameter and minimum mass.
+
+11.41
+I'm gonna make the above list as I go through the test video on blackboard.
+
+12.10
+Use hist_and_annotation.png to find a suitable minimum mass.
+
+12.16
+Increase particle diameter until no error and features actually persist.
+I'm not sure how to interpret particle diameter.
+
+12.18
+Maybe picking a reasonable minimum mass first without setting it too high and then setting particle diameter works? Using the test video, the minimum diameter must be at least 7 to not throw an error and preserve any features at all (it must be odd).
+
+12.33
+Plotted subpixel bias, the walkthrough suggest changing the minmass if there is a dip in the middle of the histograms.
+
+12.41
+I can't seem to figure out which one to do first. What about this: Set particle diameter to 11, then increase minmass until dips in subpixel bias histogram disappear and only the wanted particles are circled.
+
+12.48
+Increasing particle size seems to help in detecting all the particles. I keep running into the problem that the same particles are getting detected numerous times, but the linking stage seems to not care, so that might just be fine.
+
+12.53
+Anyway, particle diameter of 15 and minimum mass of 2250 seems to work well for the video. In the meantime I've also added numerous log messages to give an indication of how far the program got if there's an error or something.
+12.54 End
+
+13.29 Start
+Gonna run the entire test video through the analysis.
+
+13.33
+I figured out why I got so many circles on the annotate plot: I was plotting all of the batch data, instead of only the data for the first frame. Now I just need to fix the mass vs count histogram.
+
+13.34
+I also updated the mass vs count histogram plot to only show the particles from the first frame.
+
+13.55
+Sent particle positions to Quinten, he'll calculate the diffusion coefficient. The positions contain quite a few nans, so np.nanmean and np.nanstd can be used, according to the practicum document.
+13.57 End
+
+14.12
+Got a lot of nans, and diffusion coefficient is approx. 3*10^-12, about an order of magnitude to big.
+
+14.20
+Changed mass to 1500, and only a single particle has nans now.
+
+14.26
+D is still ~10^-12, one order of magnitude to big.
