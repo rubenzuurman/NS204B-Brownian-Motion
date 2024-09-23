@@ -34,3 +34,15 @@ Committed data loader module and other changes. Also committed data.
 
 21.22
 Fixed the bug with cumulative distance calculation (it's already done by tp.imsd()).
+
+21.25
+Committed the bugfix.
+
+21.44
+Started implementing the plot code which should help tune the analysis parameters.
+
+22.01
+Plot now has annotated frames, subpixel bias histogram, and mass vs count histogram.
+
+22.07
+I tested it on a 2000nm video, and the tuning is actually really convenient. I'll keep it like this for now and commit.

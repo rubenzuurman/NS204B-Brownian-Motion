@@ -2,6 +2,7 @@ import os
 
 from src.analysis import get_trajectories, analyse_trajectories
 from src.data_loader import load_video, load_batch_cache, load_link_cache, generate_batch_data, generate_link_data, save_batch_cache, save_link_cache
+import src.tune_parameters as tune_parameters
 
 def load_data(video_path: str, number_of_frames: int, force_regenerate: bool=False):
     # Get video filename.
@@ -30,13 +31,16 @@ def load_data(video_path: str, number_of_frames: int, force_regenerate: bool=Fal
 
 def main():
     # Set video path.
-    video_path = "data/metingen/005_mass_percent_500nm_40x_3.wmv"
+    video_path = "data/metingen/005_mass_percent_2000nm_40x_A_1.wmv"
     
     # Set number of frames to analyse.
     number_of_frames = 30
     
     # Load data.
     frames, batch_data, link_data = load_data(video_path, number_of_frames, force_regenerate=False)
+    
+    tune_parameters.show_tune(frames, os.path.basename(video_path), particle_diameter=15, minimum_mass=2500)
+    return
     
     # Generate trajectories.
     trajectory_data = get_trajectories(frames, batch_data, link_data)
