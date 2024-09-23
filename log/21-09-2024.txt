@@ -1,0 +1,7 @@
+21-09-2024
+17.23 Start
+Just some thoughts on how to efficiently load each video.
+1. Plot subpixel bias in x and y of 5 (e.g.) random frames of the video, increase particle diameter until the dip in the middle of the subpixel bias graphs is gone, then increase minimum mass until the correct particles are circles. (Only locate and annotate those frames that are plotted, the random frames should be the same every time, maybe use the filename as the seed of the rng.)
+2. Analyse video and output useful data (such as diffusion coefficient over time, number of trajectories, mean length of trajectories? (or maybe all trajectories with length?), to be discussed) to a file.
+3. Use the outputted data to generate plots and number for in the report.
+17.28 End

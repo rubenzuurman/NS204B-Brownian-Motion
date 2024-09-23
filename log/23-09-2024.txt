@@ -1,0 +1,30 @@
+23-09-2024
+19.31 Start
+Step 1: Random number from filename.
+Step 2: Annotate and subpx_bias 5 random frames.
+Step 3: Repeat until good (subpx_bias no dip by increasing particle diameter, no false positives on minmass parameter (enough data to compensate for edge cases)).
+Step 4: Run analysis on entire video and save batch, link, msd, and diffusion coefficient data to file.
+Step 5: Analyse results and calculate final diffusion coefficient.
+I think this is pretty good? Let's just start and see what happens.
+
+19.36
+Load frames every time.
+While tuning:
+    load frames (don't cache, the cache file is much bigger than the original wmv, I don't want to cycle my drive like that).
+    generate 5 random numbers from filename
+    annotate 5 frames, try to subpx_bias the same 5 frames, plot those in columns per frame
+
+19.44
+I want to load the data in another file.
+Function load_video("video.wmv") loads the frames from a video file.
+Function load_batch_cache("cache/batch/video_batch_data.pickle") attempts to load data, and if not exists or fails to load, returns false, else true and data.
+Function load_link_cache("cache/link/video_link_data.pickle") attempts to load data, and if not exists or fails to load, returns false, else true and data.
+Use force_regenerate parameter in main function to disable cache loading.
+
+20.49
+Implemented new data loader module, which does exactly that. I seem to be pretty slow today.
+
+20.51 End
+Some weird errors, small break.
+
+20.54 Start

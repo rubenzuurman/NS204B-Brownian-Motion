@@ -34,6 +34,6 @@ def save_cache(data, path: str):
     logger.info(f"Saving cache to location '{path}'")
     try:
         with open(path, "wb") as file:
-            return pickle.dump(data, file)
+            pickle.dump(data, file)
     except Exception as e:
         logger.warning(f"Failed to save cache to '{path}': '{e}'")

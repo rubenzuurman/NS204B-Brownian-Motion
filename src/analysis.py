@@ -114,15 +114,17 @@ def generate_batch_data(frames, number_of_frames):
     # Return batch data.
     return batch_data
 
-def generate_link_data(batch_data):
+def generate_link_data(batch_data, search_range=5, memory=3):
+    """
+    Search range: Maximum distance a particle can travel between frames to be considered a valid trajectory.
+    Memory:       Number of frames a particle can disappear for and reappear nearby to be considered the same particle.
+    """
     # Suppress messages from trackpy during linking, since this step executes the fastest.
     tp.quiet()
     
     # Generate new link data.
-    logger.info("Generating new link data (search_range=5, memory=3)...")
-    # search_range: Maximum distance a particle can travel between frames to be considered a valid trajectory.
-    # memory:       Number of frames a particle can disappear for and reappear nearby to be considered the same particle.
-    link_data = tp.link(batch_data, search_range=5, memory=3)
+    logger.info(f"Generating new link data (search_range={search_range}, memory={memory})...")
+    link_data = tp.link(batch_data, search_range=search_range, memory=memory)
     
     # Save link data.
     link_cache_path = "cache/link_df.pickle"

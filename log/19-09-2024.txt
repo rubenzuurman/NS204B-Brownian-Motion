@@ -64,3 +64,6 @@ Implemented automatic cache folder creation. Fixed a potential bug: plotting the
 
 15.14
 The above plot is now only made if there is a particle which' data can be plotted. However, the tp.link() function seems to fail as well if no particles were found by the tp.batch() function.
+
+15.17
+Committed the changes, which includes automatic cache folder creation and the prevention of a possible error if the index of the first particle in the msd dataframe was not zero.
