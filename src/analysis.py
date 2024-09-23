@@ -253,16 +253,16 @@ def analyse_trajectories(trajectory_data, number_of_frames):
     fig.savefig("particle0_msd_vs_time.png")
     
     # Calculate (and plot) cumulative distance travelled by each particle.
-    cumulative_distance = [[sum(list(msd[particle_no])[0:index]) for index in range(len(msd[particle_no]))] for particle_no in msd.columns]
+    particle_distances = [list(msd[particle_no]) for particle_no in msd.columns]
     fig, ax = plt.subplots(ncols=1, nrows=1)
-    for particle_cumul_list in cumulative_distance:
-        ax.plot(time, particle_cumul_list)
+    for particle_distance in particle_distances:
+        ax.plot(time, particle_distance)
     fig.savefig("all_particles_cumulative_distance_vs_time.png")
     logger.info("Plotted cumulative distance travelled of all particles vs time (all_particles_cumulative_distance_vs_time.png).")
     
     # Print time and particle data to use in mean and standard deviation calculation.
     print(f"time = {time}")
-    print(f"particle_distancement = {cumulative_distance}")
+    print(f"particle_displacement = {particle_distances}")
 
 def subpx_bias(f, pos_columns=None, ax=None):
     # Copied from the source of trackpy, may be deleted when no longer needed.

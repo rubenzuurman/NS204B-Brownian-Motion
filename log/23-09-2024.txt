@@ -28,3 +28,9 @@ Implemented new data loader module, which does exactly that. I seem to be pretty
 Some weird errors, small break.
 
 20.54 Start
+
+21.17
+Committed data loader module and other changes. Also committed data.
+
+21.22
+Fixed the bug with cumulative distance calculation (it's already done by tp.imsd()).

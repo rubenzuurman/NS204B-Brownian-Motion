@@ -36,7 +36,7 @@ def main():
     number_of_frames = 30
     
     # Load data.
-    frames, batch_data, link_data = load_data(video_path, number_of_frames, force_regenerate=True)
+    frames, batch_data, link_data = load_data(video_path, number_of_frames, force_regenerate=False)
     
     # Generate trajectories.
     trajectory_data = get_trajectories(frames, batch_data, link_data)
