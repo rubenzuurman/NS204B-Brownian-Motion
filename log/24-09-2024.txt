@@ -9,3 +9,52 @@ I want to be able to run the program from commandline with some parameters, e.g.
 12.28
 Added title to figure and added titles to columns of subplots.
 
+12.35
+Committed changes. Also renamed several data files to comply with naming convention, also committed that.
+
+13.25
+Implemented command line argument parser, in which you can set tune=0 to analyse number of frames, and tune=1 to only analyse 5 frames and write to tune_image.png. If number of frames is less than filter_stubs threshold argument, number of frames will be that argument. If tune=0 but cache contains less frames than is set in cmd arg, it will regenerate using new number of frames.
+
+13.28
+Tuning the batch function should be really easy now, especially since the settings for each particle size will be roughly the same. I don't get why I would filter particle size and minimum again after filtering stubs since I already did that on the batch data. I feel like keeping the default settings for search_range, memory, and threshold will probably be fine, since we got a decent diffusion coefficient last time with those parameters.
+To implement: Save relevant data of each video, and generate diffusion coefficient from that data.
+13.31 End
+
+19.21 Start
+Relevant data includes:
+    - Batch data (cached)
+    - Link data (cached)
+    - Particle trajectories
+    - Drift data
+    - Particle trajectories sub drift
+    - Time array
+    - MSD of each particle
+    - Other relevant metadata:
+        batch:        particle diameter
+        batch:        minimum mass
+        batch:        number of frames
+        link:         search range
+        link:         memory
+        filter_stubs: minimum trajectory length in frames
+19.33
+I think that's just about all the data there is to save.
+To do:
+    Add remaining parameters to commandline argument parse function.
+    Save resulting data to gen/video_filename.pickle or gen/video_filename.json.
+Other metadata:
+    video file path
+
+20.14
+Added remaining parameters to commandline argument parse function.
+Next up: Collect useful data and metadata to save to a file.
+
+21.02
+Useful data is now outputted to a corresponding file in the 'gen/' directory. I sort of see why a 'size' filter would be nice as well, since some particles have some integrated brightness (mass) of some high value, but are too smeared out to be considered good data.
+
+21.16
+Added minimum size as a command line argument.
+I think it's pretty configurable now. We only really need to use it about 15 times, three times (each sample may have refocus or some other changed conditions) for each particle size.
+I'll commit it. I'll let the unused loader functions in analysis.py sit there for now.
+
+21.33
+Fixed some bugs. Also added microns_per_pixel and frames_per_second to metadata. You can use 'mass_vs_size.png' to determine if the max_particle_size parameter needs to be altered.

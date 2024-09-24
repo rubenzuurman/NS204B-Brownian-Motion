@@ -154,7 +154,7 @@ def load_data(path: str, number_of_frames: int):
     # Return frames and processed data.
     return (frames, batch_data, link_data)
 
-def get_trajectories(frames, batch_data, link_data):
+def get_trajectories(frames, batch_data, link_data, cmd_args, output_data_dict):
     # Plot batch data.
     fig, ax = plt.subplots(ncols=2, nrows=1)
     
@@ -179,8 +179,8 @@ def get_trajectories(frames, batch_data, link_data):
     logger.info("Plotted subpixel bias (subpixel_bias.png).")
     
     # Filter stubs, e.g. remove trajectories shorter than some number of frames (25 in the walkthrough, or whatever is set in the global variable).
-    t_filtered = tp.filter_stubs(link_data, threshold=MINIMUM_TRAJECTORY_LENGTH_FRAMES)
-    logger.info(f"Removed trajectories shorter than {MINIMUM_TRAJECTORY_LENGTH_FRAMES} frames.")
+    t_filtered = tp.filter_stubs(link_data, threshold=cmd_args["min_traj_len"])
+    logger.info(f"Removed trajectories shorter than {cmd_args['min_traj_len']} frames.")
     
     # Print to see how many trajectories were removed.
     print("Before:", link_data["particle"].nunique())
@@ -194,16 +194,18 @@ def get_trajectories(frames, batch_data, link_data):
     
     # TODO: At this stage it would be good to filter the trajectory dataframe for e.g. low mass, high size, or high eccentricity.
     #t_filtered_pruned = t_filtered[((t_filtered['mass'] > 50) & (t_filtered['size'] < 2.6) & (t_filtered['ecc'] < 0.3))]
-    t_filtered_pruned = t_filtered
+    t_filtered_pruned = t_filtered[(t_filtered["size"] < cmd_args["max_particle_size"])]
     
     # Plot trajectories.
     fig, ax = plt.subplots(ncols=1, nrows=1)
     tp.plot_traj(t_filtered_pruned, ax=ax)
     fig.savefig("trajectories.png")
     logger.info("Plotted raw particle trajectories (trajectories.png).")
+    output_data_dict["trajectories"] = t_filtered_pruned
     
     # Compute drift.
     drift = tp.compute_drift(t_filtered_pruned)
+    output_data_dict["drift"] = drift
     
     # Plot drift.
     fig, ax = plt.subplots(nrows=1, ncols=1)
@@ -214,6 +216,7 @@ def get_trajectories(frames, batch_data, link_data):
     
     # Subtract drift from data.
     t_no_drift = tp.subtract_drift(t_filtered_pruned.copy(), drift)
+    output_data_dict["trajectories_sub_drift"] = t_no_drift
     
     # Plot trajectories again.
     fig, ax = plt.subplots(ncols=1, nrows=1)
@@ -223,14 +226,16 @@ def get_trajectories(frames, batch_data, link_data):
     
     return t_no_drift
 
-def analyse_trajectories(trajectory_data, number_of_frames):
+def analyse_trajectories(trajectory_data, cmd_args, output_data_dict):
     # Calculate mean squared displacement.
     microns_per_pixel = 1 / 6 # TODO: Measure this using the special 10x100 um slides.
     frames_per_second = 20
     
     del trajectory_data["particle"]
-    msd = tp.imsd(trajectory_data, mpp=microns_per_pixel, fps=frames_per_second, max_lagtime=number_of_frames)
+    msd = tp.imsd(trajectory_data, mpp=microns_per_pixel, fps=frames_per_second, max_lagtime=cmd_args['num_frames'])
     logger.info(f"Calculated mean squared displacement of all particles (mpp={microns_per_pixel}, fps={frames_per_second}).")
+    output_data_dict["metadata"]["microns_per_pixel"] = microns_per_pixel
+    output_data_dict["metadata"]["frames_per_second"] = frames_per_second
     
     # Plot msd vs time.
     fig, ax = plt.subplots(ncols=1, nrows=1)
@@ -243,6 +248,7 @@ def analyse_trajectories(trajectory_data, number_of_frames):
     
     # Plot particle with index 0 msd vs time.
     time = list(msd.index)
+    output_data_dict["time"] = time
     fig, ax = plt.subplots(ncols=1, nrows=1)
     if len(msd.columns) > 0:
         particle0 = list(msd[msd.columns[0]])
@@ -259,10 +265,12 @@ def analyse_trajectories(trajectory_data, number_of_frames):
         ax.plot(time, particle_distance)
     fig.savefig("all_particles_cumulative_distance_vs_time.png")
     logger.info("Plotted cumulative distance travelled of all particles vs time (all_particles_cumulative_distance_vs_time.png).")
+    output_data_dict["particle_distances"] = particle_distances
     
     # Print time and particle data to use in mean and standard deviation calculation.
-    print(f"time = {time}")
-    print(f"particle_displacement = {particle_distances}")
+    #print(f"time = {time}")
+    #print(f"particle_displacement = {particle_distances}")
+    print("Uncomment line above this to print time array and particle positions.")
 
 def subpx_bias(f, pos_columns=None, ax=None):
     # Copied from the source of trackpy, may be deleted when no longer needed.
