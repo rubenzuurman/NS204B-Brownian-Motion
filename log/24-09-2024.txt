@@ -1,0 +1,11 @@
+24-09-2024
+12.09 Start
+I have a plot now of 5 random frames, with annotate on top row, subpx_bias on middle row, and mass vs count on bottom row.
+NOTE: Incorporate size filtering into the program?
+
+12.14
+I want to be able to run the program from commandline with some parameters, e.g. tune=1 to only run the tuning step, and tune=0 to run the entire analysis.
+
+12.28
+Added title to figure and added titles to columns of subplots.
+

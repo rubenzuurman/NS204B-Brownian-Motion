@@ -46,3 +46,6 @@ Plot now has annotated frames, subpixel bias histogram, and mass vs count histog
 
 22.07
 I tested it on a 2000nm video, and the tuning is actually really convenient. I'll keep it like this for now and commit.
+
+22.10 End
+Committed the changes.
