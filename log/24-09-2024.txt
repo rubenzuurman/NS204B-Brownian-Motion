@@ -58,3 +58,6 @@ I'll commit it. I'll let the unused loader functions in analysis.py sit there fo
 
 21.33
 Fixed some bugs. Also added microns_per_pixel and frames_per_second to metadata. You can use 'mass_vs_size.png' to determine if the max_particle_size parameter needs to be altered.
+
+21.46 Edn
+Committed the changes. I think I've done an okay job on this one, we'll see tomorrow if it's actually convenient to use lmao.

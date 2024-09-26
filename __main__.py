@@ -8,13 +8,13 @@ from src.analysis import get_trajectories, analyse_trajectories
 from src.data_loader import load_video, load_batch_cache, load_link_cache, generate_batch_data, generate_link_data, save_batch_cache, save_link_cache
 import src.tune_parameters as tune_parameters
 
-def load_data(video_path: str, cmd_args, force_regenerate: bool=False):
+def load_data(video_path: str, cmd_args):
     # Get video filename.
     video_filename = os.path.basename(video_path)
     
     # Load data.
     frames = load_video(video_path)
-    if force_regenerate:
+    if cmd_args["force_regenerate"]:
         batch_data = generate_batch_data(frames, cmd_args["num_frames"], particle_diameter=cmd_args["particle_diameter"], minimum_mass=cmd_args["minmass"])
         link_data  = generate_link_data(batch_data)
     else:
@@ -44,6 +44,7 @@ def print_usage():
     print("    search_range parameter (nonnegative integer) can be used to set the maximum distance a particle can travel between frames to be considered a valid trajectory")
     print("    memory parameter (nonnegative integer) can be used to set the number of frames a particle can disappear for and reappear nearby to be considered the same particle")
     print("    min_traj_len parameter (nonnegative integer) can be used to set the minimum length in frames of particle trajectories to be included in the analysis")
+    print("    force_regenerate parameter (0 or 1) can be used to ignore any cache that might exist and overwrite it")
     print("It's currently recommended to leave 'search_range', 'memory', and 'min_traj_len' on default (non supplied), since those values seem to work fine.")
     print("The parameters 'particle_diameter' and 'minmass' can be tuned by also supplying 'tune=1' and looking at the file 'tune_image.png'.")
 
@@ -55,6 +56,7 @@ def parse_cmd_args(args: list[str]):
     DEFAULT_SEARCH_RANGE = 5
     DEFAULT_MEMORY = 3
     DEFAULT_MIN_TRAJ_LEN = 25
+    DEFAULT_FORCE_REGENERATE = False
     
     tune_bool = False
     particle_diameter = 5
@@ -172,6 +174,19 @@ def parse_cmd_args(args: list[str]):
                 min_traj_len = None
                 error_encountered = True
             arguments_parsed["min_traj_len"] = min_traj_len
+        elif name == "force_regenerate":
+            try:
+                force_regenerate_bool = int(value)
+                if force_regenerate_bool == 0:
+                    force_regenerate_bool = False
+                else:
+                    force_regenerate_bool = True
+            except Exception as e:
+                logger.critical(f"Could not parse 'force_regenerate' argument: '{e}'")
+                print_usage()
+                force_regenerate_bool = None
+                error_encountered = True
+            arguments_parsed["force_regenerate"] = force_regenerate_bool
     
     # Needs to be checked first, since 'num_frames' parameter may depend on it.
     if not ("min_traj_len" in arguments_parsed):
@@ -203,6 +218,9 @@ def parse_cmd_args(args: list[str]):
     if not ("memory" in arguments_parsed):
         logger.warning(f"Parameter 'memory' is missing, defaulting to '{DEFAULT_MEMORY}'.")
         arguments_parsed["memory"] = DEFAULT_MEMORY
+    if not ("force_regenerate" in arguments_parsed):
+        logger.warning(f"Parameter 'force_regenerate' is missing, defaulting to '{DEFAULT_FORCE_REGENERATE}'.")
+        arguments_parsed["force_regenerate"] = DEFAULT_FORCE_REGENERATE
     
     # Check if the number of frames is less than the minimum trajectory length in frames in filter_stubs.
     if arguments_parsed["num_frames"] < arguments_parsed["min_traj_len"]:
@@ -215,8 +233,10 @@ def parse_cmd_args(args: list[str]):
     return arguments_parsed
 
 def main():
+    
+    
     # Set video path.
-    video_path = "data/metingen/005_mass_percent_1000nm_40x_A_2.wmv"
+    video_path = "data/metingen/005_mass_percent_500nm_40x_A_1.wmv"
     
     # Get command line arguments.
     cmd_args = sys.argv[1:]
@@ -225,7 +245,7 @@ def main():
     args_parsed = parse_cmd_args(cmd_args)
     
     # Load data.
-    frames, batch_data, link_data = load_data(video_path, args_parsed, force_regenerate=False)
+    frames, batch_data, link_data = load_data(video_path, args_parsed)
     
     # Run tuning function if tune=True.
     if args_parsed["tune"]:

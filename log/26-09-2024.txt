@@ -1,0 +1,76 @@
+26-09-2024
+11.12 Start
+Goal for today is:
+    1. Determine for each video what parameters would be good (particle_diameter, minmass, and (optionally) size), 20 seconds per video.
+    2. Automate the analysis of the videos so it can run in the background while I do other stuff.
+
+11.41
+I just discovered you can also annotate a frame **after** linking. I'm gonna do that now. (To see what size filtering does.)
+
+12.22
+Plotted the annotate after linking as well. I think filtering after linking for mass < minmass (same as batch minmass) AND size < max_particle_size given AND eccentricity < 0.6 would is fine. I works well for 500nm, I'll try the other sizes as well.
+    Params for 500nm:
+        particle_diameter=15
+        minmass=400
+        max_particle_size=3
+
+12.36
+It seems to work fine for 1500nm as well. I'll try to compile some parameters for each particle size and automate the analysis.
+
+12.46
+500nm:
+    particle_diameter=15
+    minmass=400
+    max_particle_size=3
+is fine.
+
+12.53
+750nm:
+    particle_diameter=15
+    minmass=1000
+    max_particle_size=3
+
+13.00
+1000nm:
+    particle_diameter=15
+    minmass=1000
+    max_particle_size=3.5
+
+13.05
+Step plan I follow when finding parameters (specifically for 005_mass_percent_1500nm_40x_C_3.wmv):
+    Run with tune=1 particle_diameter=9 minmass=0
+    Increase particle diameter until no more dip in subpixel bias histogram (tune_image.png) and all particles that should reasonably be detected are detected in the image above it. (Higher is better [according to walkthrough]).
+    Increase mass to filter out the majority of the detections since they are false positives. I tend to use the mass vs count graph at the bottom of the image determine a minmass that removes the initial peak of low minmasses. I then make sure all particles that should reasonably be detected are actually detected. If I can get away with a higher minmass, I will.
+    Run with tune=0 particle_diameter=15 minmass=1500 [max_particle_size=100 (this is default anyway)] force_regenerate=1 num_frames=50
+        tune=0: To run entire analysis.
+        force_regenerate=1: To ignore cache, which can prevent changed setting from getting used, since batch and link are skipped.
+        num_frames=50: I'm going to look at the annotation before and after filtering on frame 40 (randomly chosen) in this case, so 50 frames is enough.
+    I now look compare the annotation after filtering for size and the mass_vs_size.png plot. I decrease the max_particle_size parameter to a value which seems to only capture clear particles, and I use the mass vs size graph to inform my decision.
+    Frame number 40 seems to be hard to analyse in this case (the actual particles are filtered by size before the phantom particles?), so I'll switch to frame 25.
+    So frame number 25 is just as bad. Since we're looking at trajectory data **after** filter_stubs is called, I know for a fact that the trajectories concerning these 'bad' particles are at least 25 frames long, so I'm going to hope that they were once good trajectories but have turned kinda fuzzy.
+    I'm now going to try the parameters on a different sample (005_mass_percent_1500nm_40x_A_2) of the same size and see how it looks.
+    Run with all parameters
+        python -u . tune=1 particle_diameter=15 minmass=1500 max_particle_size=5 force_regenerate=1 num_frames=50
+    but note that tune=1. I look at tune_image.png and it looks fine (no dip in hist, most good particles seem to be detected).
+    Run with tune=0
+        python -u . tune=0 particle_diameter=15 minmass=1500 max_particle_size=5 force_regenerate=1 num_frames=50
+    and look at annotation after filtering again. It seems to still detect these 'bad' particles, so I'll try increasing the minmass to 2000. Minmass=3000 look good on frame 25. Also on frame 35. This is a better minmass and everything looks good. Final command:
+        python -u . tune=0 particle_diameter=15 minmass=3000 max_particle_size=5 force_regenerate=1 num_frames=50
+    Final params 1500nm:
+        particle_diameter=15
+        minmass=3000
+        max_particle_size=5
+13.33
+
+13.40
+params 2000nm:
+    particle_diameter=19 minmass=3500 max_particle_size=5.5
+
+13.43 End
+I'll automate later.
+
+14.32 Start
+Start automating analysis on all samples using the parameters above.
+
+14.35
+Analysing a 500nm video 800 frames with ~200 features per frame took about 1m15s and yielded ~5MB of data.

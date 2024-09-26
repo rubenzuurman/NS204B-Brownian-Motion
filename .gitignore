@@ -173,5 +173,6 @@ particle0_msd_vs_time.png
 all_particles_cumulative_distance_vs_time.png
 subpixel_bias.png
 tune_image.png
+hist_and_annotation_after_filter.png
 cache/
 data/metingen.7z

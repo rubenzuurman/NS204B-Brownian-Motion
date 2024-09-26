@@ -156,9 +156,9 @@ def load_data(path: str, number_of_frames: int):
 
 def get_trajectories(frames, batch_data, link_data, cmd_args, output_data_dict):
     # Plot batch data.
-    fig, ax = plt.subplots(ncols=2, nrows=1)
+    fig, ax = plt.subplots(ncols=2, nrows=1, figsize=(16, 9), gridspec_kw={"width_ratios": [1, 2]})
     
-    frame_no = 40
+    frame_no = 55
     ax[0].set_title(f"Histogram of particles in frame {frame_no}\nbinned by mass")
     ax[0].hist(batch_data[batch_data["frame"] == frame_no]["mass"], bins=20)
     ax[0].set(xlabel="Mass", ylabel="Count")
@@ -194,7 +194,28 @@ def get_trajectories(frames, batch_data, link_data, cmd_args, output_data_dict):
     
     # TODO: At this stage it would be good to filter the trajectory dataframe for e.g. low mass, high size, or high eccentricity.
     #t_filtered_pruned = t_filtered[((t_filtered['mass'] > 50) & (t_filtered['size'] < 2.6) & (t_filtered['ecc'] < 0.3))]
-    t_filtered_pruned = t_filtered[(t_filtered["size"] < cmd_args["max_particle_size"])]
+    # IMO ecc > 0.6 is too elliptical to be a particle, I'm on the high side to be safe.
+    output_data_dict["metadata"]["minmass_after_linking_mean_particle_mass"] = cmd_args["minmass"]
+    output_data_dict["metadata"]["max_eccentricity"] = 0.6
+    
+    t_filtered_pruned = t_filtered[(t_filtered["size"] < cmd_args["max_particle_size"]) & (t_filtered["mass"] > output_data_dict["metadata"]["minmass_after_linking_mean_particle_mass"]) & (t_filtered["ecc"] < output_data_dict["metadata"]["max_eccentricity"])]
+    logger.info(f"Filtered trajectory dataframe for (size < {cmd_args['max_particle_size']}) & (mass > {output_data_dict['metadata']['minmass_after_linking_mean_particle_mass']}) & (ecc < {output_data_dict['metadata']['max_eccentricity']}).")
+    
+    # Plot annotated frame after filtering.
+    fig, ax = plt.subplots(ncols=2, nrows=1, figsize=(16, 9), gridspec_kw={"width_ratios": [1, 2]})
+    
+    #frame_no = 30
+    ax[0].set_title(f"Histogram of particles in frame {frame_no}\nbinned by mass (after filter)")
+    ax[0].hist(t_filtered_pruned[t_filtered_pruned["frame"] == frame_no]["mass"], bins=20)
+    ax[0].set(xlabel="Mass", ylabel="Count")
+    
+    ax[1].set_title(f"Annotation of particles in frame {frame_no}")
+    tp.annotate(t_filtered_pruned[t_filtered_pruned["frame"] == frame_no], frames[frame_no], ax=ax[1])
+    
+    # TODO: Find a better name for this plot.
+    fig.tight_layout()
+    fig.savefig("hist_and_annotation_after_filter.png")
+    logger.info("Plotted mass vs count histogram and annotated frame after filtering (hist_and_annotation_after_filter.png).")
     
     # Plot trajectories.
     fig, ax = plt.subplots(ncols=1, nrows=1)

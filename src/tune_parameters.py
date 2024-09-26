@@ -18,7 +18,7 @@ def show_tune(frames, video_filename, particle_diameter, minimum_mass):
     batch_data = tp.batch(useful_frames, diameter=particle_diameter, invert=True, minmass=minimum_mass, processes=1)
     
     # Initialize plot.
-    fig, axs = plt.subplots(ncols=5, nrows=3, figsize=(24, 16), gridspec_kw={"height_ratios": [1, 1, 1]})
+    fig, axs = plt.subplots(ncols=5, nrows=3, figsize=(50, 32), gridspec_kw={"height_ratios": [1, 1, 1]})
     
     # Annotate each frame into plot.
     for index in range(len(frame_numbers)):
