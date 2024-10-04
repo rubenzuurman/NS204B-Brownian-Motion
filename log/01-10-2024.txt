@@ -1,0 +1,12 @@
+01-10-2024
+12.11 Start
+
+12.12
+Start running analysis on all videos using mpp=50/268 instead of the placeholder mpp=1/6.
+
+12.59
+Done running analysis. I just realized I have overwritten all previous pickle files, but luckily they are on Quinten's laptop.
+
+12.59 End
+
+13.13 A little bit of good news: I still have the original pickles.zip.

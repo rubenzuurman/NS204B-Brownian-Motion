@@ -232,54 +232,63 @@ def parse_cmd_args(args: list[str]):
         sys.exit(0)
     return arguments_parsed
 
-def main():
+def main(cmd_args: list[str]):
+    parameters = {
+        "500nm":  ["particle_diameter=15", "minmass=400", "max_particle_size=3"], 
+        "750nm":  ["particle_diameter=15", "minmass=1000", "max_particle_size=3"], 
+        "1000nm": ["particle_diameter=15", "minmass=1000", "max_particle_size=3.5"], 
+        "1500nm": ["particle_diameter=15", "minmass=3000", "max_particle_size=5"], 
+        "2000nm": ["particle_diameter=19", "minmass=3500", "max_particle_size=5.5"]
+    }
+    universal_parameters = ["tune=0", "force_regenerate=1", "num_frames=800"]
     
-    
-    # Set video path.
-    video_path = "data/metingen/005_mass_percent_500nm_40x_A_1.wmv"
-    
-    # Get command line arguments.
-    cmd_args = sys.argv[1:]
-    
-    # Parse command line arguments. This function substitutes default values for missing parameters.
-    args_parsed = parse_cmd_args(cmd_args)
-    
-    # Load data.
-    frames, batch_data, link_data = load_data(video_path, args_parsed)
-    
-    # Run tuning function if tune=True.
-    if args_parsed["tune"]:
-        tune_parameters.show_tune(frames, os.path.basename(video_path), particle_diameter=args_parsed["particle_diameter"], minimum_mass=args_parsed["minmass"])
-    else:
-        # Check if batch_data contains too few frames, if so regenerate data.
-        number_of_frames_loaded = len(list(set(batch_data["frame"])))
-        if args_parsed["num_frames"] > number_of_frames_loaded:
-            logger.warning(f"Regenerating batch- and link data, since tune=True and number of frames currently loaded ({number_of_frames_loaded}) is less than number of frames requested ({args_parsed['num_frames']}).")
-            frames, batch_data, link_data = load_data(video_path, args_parsed, force_regenerate=True)
-        
-        # Construct output_data_dict to be used by the functions to store trajectory data and particle positions.
-        output_data_dict = {}
-        
-        # Add metadata to command line arguments (the ones that were missing have been set to some default value by the parse_cmd_args function).
-        metadata = {k: v for k, v in args_parsed.items()}
-        metadata["video_path"] = video_path
-        metadata["total_number_of_frames_in_video"] = len(frames)
-        output_data_dict["metadata"] = metadata
-        
-        # Generate trajectories.
-        trajectory_data = get_trajectories(frames, batch_data, link_data, args_parsed, output_data_dict)
-        
-        # Calculate diffusion constant.
-        diffusion_constant = analyse_trajectories(trajectory_data, args_parsed, output_data_dict)
-        
-        # Save output data dict to file.
-        output_data_folder = os.path.join(os.getcwd(), "gen")
-        if not os.path.isdir(output_data_folder):
-            os.mkdir(output_data_folder)
-        output_file_path = os.path.join(output_data_folder, f"{os.path.splitext(os.path.basename(video_path))[0]}_output_data.pickle")
-        with open(output_file_path, "wb") as file:
-            pickle.dump(output_data_dict, file)
-        logger.info(f"Saved output data dict to '{output_file_path}'.")
+    for particle_size, params in parameters.items():
+        for sample_id in ["A", "B", "C"]:
+            for recording_id in [1, 2, 3]:
+                # Set video path.
+                #video_path = "data/metingen/005_mass_percent_500nm_40x_A_1.wmv"
+                video_path = f"data/metingen/005_mass_percent_{particle_size}_40x_{sample_id}_{recording_id}.wmv"
+                
+                # Parse command line arguments. This function substitutes default values for missing parameters.
+                cmd_args = params + universal_parameters
+                args_parsed = parse_cmd_args(cmd_args)
+                
+                # Load data.
+                frames, batch_data, link_data = load_data(video_path, args_parsed)
+                
+                # Run tuning function if tune=True.
+                if args_parsed["tune"]:
+                    tune_parameters.show_tune(frames, os.path.basename(video_path), particle_diameter=args_parsed["particle_diameter"], minimum_mass=args_parsed["minmass"])
+                else:
+                    # Check if batch_data contains too few frames, if so regenerate data.
+                    number_of_frames_loaded = len(list(set(batch_data["frame"])))
+                    if args_parsed["num_frames"] > number_of_frames_loaded:
+                        logger.warning(f"Regenerating batch- and link data, since tune=True and number of frames currently loaded ({number_of_frames_loaded}) is less than number of frames requested ({args_parsed['num_frames']}).")
+                        frames, batch_data, link_data = load_data(video_path, args_parsed, force_regenerate=True)
+                    
+                    # Construct output_data_dict to be used by the functions to store trajectory data and particle positions.
+                    output_data_dict = {}
+                    
+                    # Add metadata to command line arguments (the ones that were missing have been set to some default value by the parse_cmd_args function).
+                    metadata = {k: v for k, v in args_parsed.items()}
+                    metadata["video_path"] = video_path
+                    metadata["total_number_of_frames_in_video"] = len(frames)
+                    output_data_dict["metadata"] = metadata
+                    
+                    # Generate trajectories.
+                    trajectory_data = get_trajectories(frames, batch_data, link_data, args_parsed, output_data_dict)
+                    
+                    # Calculate diffusion constant.
+                    diffusion_constant = analyse_trajectories(trajectory_data, args_parsed, output_data_dict)
+                    
+                    # Save output data dict to file.
+                    output_data_folder = os.path.join(os.getcwd(), "gen")
+                    if not os.path.isdir(output_data_folder):
+                        os.mkdir(output_data_folder)
+                    output_file_path = os.path.join(output_data_folder, f"{os.path.splitext(os.path.basename(video_path))[0]}_output_data.pickle")
+                    with open(output_file_path, "wb") as file:
+                        pickle.dump(output_data_dict, file)
+                    logger.info(f"Saved output data dict to '{output_file_path}'.")
 
 if __name__ == "__main__":
-    main()
+    main(cmd_args=sys.argv[1:])

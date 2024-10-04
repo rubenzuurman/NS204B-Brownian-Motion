@@ -249,7 +249,7 @@ def get_trajectories(frames, batch_data, link_data, cmd_args, output_data_dict):
 
 def analyse_trajectories(trajectory_data, cmd_args, output_data_dict):
     # Calculate mean squared displacement.
-    microns_per_pixel = 1 / 6 # TODO: Measure this using the special 10x100 um slides.
+    microns_per_pixel = 50 / 268
     frames_per_second = 20
     
     del trajectory_data["particle"]

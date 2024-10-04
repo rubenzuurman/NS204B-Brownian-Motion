@@ -74,3 +74,15 @@ Start automating analysis on all samples using the parameters above.
 
 14.35
 Analysing a 500nm video 800 frames with ~200 features per frame took about 1m15s and yielded ~5MB of data.
+
+14.58
+Started running the analysis on all videos using the parameters from above.
+I've also realized that tp.quiet() persists, so minimal output will be generated I guess.
+
+15.08 Done analysing 500nm.
+15.18 Done analysing 750nm.
+15.28 Done analysing 1000nm.
+15.37 Done analysing 1500nm.
+15.45 Done analysing 2000nm.
+
+15.47 End
